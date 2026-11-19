@@ -361,6 +361,7 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .
 .welcome .logo { width: 72px; height: 72px; margin: 0 auto 16px; }
 .welcome h1 { font-size: 30px; margin-bottom: 8px; }
 .welcome p { color: var(--muted); margin: 0 auto 22px; max-width: 520px; }
+.welcome p svg { width: 15px; height: 15px; vertical-align: -2px; margin-right: 4px; }
 .welcome .row { justify-content: center; }
 .features { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; margin-top: 30px; text-align: left; }
 .features div { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px; font-size: 13px; color: var(--muted); }

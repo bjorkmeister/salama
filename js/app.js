@@ -127,6 +127,7 @@ function renderWelcome() {
     <div class="logo">${logo()}</div>
     <h1>Kipinä</h1>
     <p>Oma Tesla-kojelauta ja kauko-ohjain selaimessa. Yhteys kulkee suoraan Teslan virallisen Fleet API:n kautta – tunnukset ja avaimet pysyvät vain tällä laitteella.</p>
+    <p class="small muted" style="max-width:520px;margin:-8px auto 22px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface)">${icon('info')} Henkilökohtainen harrasteprojekti – <b>ei Tesla, Inc:n virallinen sovellus</b>. Tämä sivu ei koskaan kysy salasanaasi: kirjautuminen tapahtuu Teslan omalla sivulla <code>auth.tesla.com</code>.</p>
     <div class="row"><button class="btn primary" data-act="login">${icon('key')}Kirjaudu Tesla-tilillä</button><button class="btn" data-act="setup">${icon('settings')}Käyttöönotto</button><button class="btn" data-act="demo">${icon('play')}Kokeile demoa</button></div>
     <div class="features">
       <div><b>Kojelauta</b>Akku, toimintamatka, lämpötilat, renkaat, ovet ja luukut yhdellä silmäyksellä.</div>

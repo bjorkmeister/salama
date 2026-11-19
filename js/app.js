@@ -8,12 +8,16 @@ import { esc, toast, confirmModal, ago, fmtNum, parseHhmm, MI } from './ui.js';
 import { homeView, climateView, chargeView, securityView, carSvg } from './views.js';
 import { moreView, moreActions, mapPanel } from './more.js';
 import * as demo from './demo.js';
+import { statsView, SCENES } from './features.js';
+import { record, loadHistory, historyCsv, clearHistory } from './history.js';
+import { getPrices } from './spot.js';
+import { download, copyText } from './ui.js';
 
 const TABS = [
   ['home', 'Koti', 'home'], ['climate', 'Ilmasto', 'fan'], ['charge', 'Lataus', 'bolt'],
-  ['map', 'Kartta', 'map'], ['security', 'Turva', 'shield'], ['more', 'Lisää', 'more'],
+  ['map', 'Kartta', 'map'], ['security', 'Turva', 'shield'], ['stats', 'Tilastot', 'chart'], ['more', 'Lisää', 'more'],
 ];
-const LIVE_TABS = new Set(['home', 'climate', 'charge', 'security', 'map']);
+const LIVE_TABS = new Set(['home', 'climate', 'charge', 'security', 'map', 'stats']);
 
 export const state = {
   vin: null, summary: null, data: null, updatedAt: 0, loading: false, error: null,
@@ -98,10 +102,20 @@ function renderView() {
     case 'charge': html = chargeView(d, state); break;
     case 'security': html = securityView(d, state); break;
     case 'map': html = mapPanel(d, state); break;
+    case 'stats': html = statsView(d, state); break;
     case 'more': html = moreView(state); break;
   }
   el.innerHTML = banner() + `<div class="${stale}">${html}</div>`;
   if (state.tab === 'map') mountMap();
+  if (state.tab === 'charge' && !state.spot) loadSpot();
+}
+
+async function loadSpot(force = false) {
+  state.spot = { loading: true };
+  try {
+    state.spot = store.demo ? demo.demoPrices() : await getPrices({ force });
+  } catch (e) { state.spot = { error: e.message }; }
+  if (state.tab === 'charge') renderView();
 }
 
 export function render() {
@@ -205,7 +219,7 @@ export async function refresh({ force = false } = {}) {
       try {
         state.data = await V.vehicleData(state.vin);
         state.updatedAt = Date.now();
-        if (!store.demo) store.cache = { vin: state.vin, data: state.data, at: state.updatedAt };
+        if (!store.demo) { store.cache = { vin: state.vin, data: state.data, at: state.updatedAt }; record(state.vin, state.data); }
       } catch (e) {
         if (e.status === 408) state.summary = { ...state.summary, state: 'asleep' };
         else throw e;
@@ -218,6 +232,7 @@ export async function refresh({ force = false } = {}) {
     state.loading = false;
     render();
     schedule();
+    if (pendingScene && state.data) { const s = pendingScene; pendingScene = null; runScene(s); }
   }
 }
 
@@ -271,7 +286,62 @@ export async function runCmd(name, params = {}, { label, confirm, danger, el, af
 
 let tempTimer = null;
 
+let pendingScene = null;
+
+async function runScene(id, el) {
+  const sc = SCENES[id];
+  if (!sc) return toast('Tuntematon kohtaus', 'err');
+  if (!state.data) return toast('Auton tiedot puuttuvat – päivitä ensin', 'err');
+  const steps = sc.steps(state.data);
+  if (!(await confirmModal({ title: `Suoritetaanko “${sc.name}”?`, text: steps.map((s) => s[2]).join(' · '), ok: 'Suorita' }))) return;
+  busy(el, true);
+  const fails = [];
+  try {
+    await ensureAwake();
+    for (const [cmd, p, label] of steps) {
+      try { await V.command(state.vin, cmd, p); } catch (e) { fails.push(`${label}: ${e.message}`); }
+    }
+  } catch (e) { fails.push(e.message); }
+  busy(el, false);
+  if (fails.length) toast(`${sc.name}: ${steps.length - fails.length}/${steps.length} onnistui. ${fails[0]}`, 'err', 9000);
+  else toast(`${sc.name} valmis`);
+  setTimeout(() => refresh(), store.demo ? 300 : 2500);
+}
+
+const DAY_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
 const ACTIONS = {
+  scene: (el) => runScene(el.dataset.scene, el),
+  'copy-text': (el) => copyText(el.dataset.text),
+  'spot-load': () => loadSpot(true),
+  async 'spot-schedule'(el) {
+    const s = new Date(+el.dataset.start), e = new Date(+el.dataset.end);
+    const sm = s.getHours() * 60 + s.getMinutes(), em = e.getHours() * 60 + e.getMinutes();
+    const fmt = (m) => `${String(Math.floor(m / 60)).padStart(2, '0')}.${String(m % 60).padStart(2, '0')}`;
+    if (!(await confirmModal({ title: `Ajastetaanko lataus klo ${fmt(sm)}–${fmt(em)}?`, text: 'Autoon tallennetaan kertaluonteinen latausaikataulu tähän sijaintiin. Auto aloittaa ja lopettaa latauksen itse.', ok: 'Ajasta' }))) return;
+    const ok = await runCmd('add_charge_schedule', { start_time: sm, start_enabled: true, end_time: em, end_enabled: true, days_of_week: DAY_EN[s.getDay()], one_time: true, enabled: true, name: 'Pörssisähkö', ...latlon() }, { el, label: `Lataus ajastettu klo ${fmt(sm)}–${fmt(em)}` });
+    if (!ok) {
+      toast('Kokeillaan vanhempaa ajastustapaa (vain aloitusaika)…', 'info');
+      await runCmd('set_scheduled_charging', { enable: true, time: sm }, { el, label: `Latauksen aloitus ajastettu klo ${fmt(sm)}` });
+    }
+  },
+  async 'sc-history'(el) {
+    state.scHistory = { loading: true };
+    renderView();
+    try {
+      if (store.demo) state.scHistory = { data: demo.demoSuperchargerHistory() };
+      else {
+        const { get } = await import('./api.js');
+        const r = await get(`/api/1/dx/charging/history?vin=${state.vin}`);
+        state.scHistory = { data: r.data ?? r.response?.data ?? (Array.isArray(r.response) ? r.response : []) };
+      }
+    } catch (e) { state.scHistory = { error: e.message }; }
+    renderView();
+  },
+  'hist-export': () => download(`salama-historia-${new Date().toISOString().slice(0, 10)}.csv`, historyCsv(loadHistory()), 'text/csv'),
+  async 'hist-clear'() {
+    if (await confirmModal({ title: 'Tyhjennetäänkö historia?', text: 'Kaikki tähän selaimeen tallennetut mittaukset poistetaan.', ok: 'Tyhjennä', danger: true })) { clearHistory(); renderView(); }
+  },
   refresh: () => refresh({ force: true }),
   async wake(el) {
     busy(el, true);
@@ -435,6 +505,12 @@ document.addEventListener('pointerup', () => { if (state.interacting) setTimeout
 // Lomakkeet
 const days = (form, name) => [...form.querySelectorAll(`[data-days="${name}"] button.active`)].map((b) => b.dataset.day).join(',');
 const FORMS = {
+  spot: (f, fd) => {
+    state.spotDeparture = parseHhmm(fd.get('dep'));
+    state.spotTarget = +fd.get('target');
+    store.patchSettings({ batteryKwh: +fd.get('cap') || 75, chargeKw: +fd.get('kw') || '' });
+    renderView();
+  },
   'add-precondition': (f, fd) => {
     const d = days(f, 'pre');
     if (!d) return toast('Valitse vähintään yksi päivä', 'err');
@@ -473,6 +549,8 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => st
 
 async function boot() {
   applyTheme();
+  const sp = new URLSearchParams(location.search).get('scene');
+  if (sp) { pendingScene = sp; history.replaceState(null, '', location.pathname); }
   try {
     if (await handleCallback()) { toast('Kirjautuminen onnistui'); store.demo = false; state.tab = 'home'; }
   } catch (e) {

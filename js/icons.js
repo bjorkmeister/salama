@@ -63,6 +63,7 @@ const P = {
   sound: '<path d="M4 10v4h3l6 4V6l-6 4H4z"/><path d="M17 9l4 6M21 9l-4 6"/>',
   alertlist: '<path d="M8 6h13M8 12h13M8 18h13"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/>',
   steering: '<circle cx="12" cy="12" r="9"/><path d="M3.2 11h5.3l1.5 2h4l1.5-2h5.3M12 15v6"/>',
+  chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
   tonneau: '<path d="M3 15h18M5 15V9h14v6M3 19h18"/>',
 };
 

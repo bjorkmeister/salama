@@ -9,6 +9,7 @@ import { icon } from './icons.js';
 import { esc, attr, toast, confirmModal, jsonHtml, copyText, download, fmtNum } from './ui.js';
 import { btn, switchRow, seg, nearbyCard } from './views.js';
 import * as demo from './demo.js';
+import { PAINTS } from './car.js';
 
 const PEM_PATH = '.well-known/appspecific/com.tesla.3p.public-key.pem';
 
@@ -146,6 +147,13 @@ function carView(st) {
       <div><div class="k">Vanteet</div><div class="v small">${esc(cfg.wheel_type || '–')}</div></div>
     </div>
     ${vehicles.length > 1 ? `<p class="muted small" style="margin:14px 0 6px">Valitse auto</p><div class="row">${vehicles.map((x) => `<button class="btn sm ${x.vin === st.vin ? 'primary' : ''}" data-act="pick-vehicle" data-vin="${esc(x.vin)}">${esc(x.display_name || x.vin)}</button>`).join('')}</div>` : ''}
+    <form class="row" data-form="car-look" style="margin-top:14px">
+      <label class="field" style="flex:1;min-width:160px">Auton väri kuvassa<select class="input" name="carColor">
+        <option value="auto">Automaattinen${cfg.exterior_color ? ` (${esc(cfg.exterior_color)})` : ''}</option>
+        ${Object.entries(PAINTS).map(([k, [, n]]) => `<option value="${k}" ${store.settings.carColor === k ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></label>
+      <label class="field" style="width:130px">Akku (kWh)<input class="input" type="number" name="batteryKwh" min="30" max="130" value="${esc(store.settings.batteryKwh)}"></label>
+      <button class="btn" type="submit" style="align-self:flex-end">Tallenna</button>
+    </form>
     <form class="row" data-form="rename" style="margin-top:14px"><input class="input" name="name" value="${esc(v.vehicle_name || '')}" maxlength="40" style="flex:1;min-width:160px" aria-label="Auton nimi"><button class="btn" type="submit">${icon('edit')}Nimeä</button></form>
   </section>
   <section class="card span-6"><div class="card-head"><h2>${icon('power')}Virranhallinta</h2></div>
@@ -316,6 +324,11 @@ export const moreActions = {
     V.resetCommander();
     toast('Asetukset tallennettu');
     ctx.render();
+  },
+  'form:car-look'(f, fd, ctx) {
+    store.patchSettings({ carColor: fd.get('carColor'), batteryKwh: +fd.get('batteryKwh') || 75 });
+    toast('Tallennettu');
+    ctx.renderView();
   },
   'form:rename'(f, fd, ctx) {
     const name = String(fd.get('name') || '').trim();

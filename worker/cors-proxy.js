@@ -18,6 +18,9 @@ const ALLOWED_HOSTS = new Set([
   'fleet-api.prd.eu.vn.cloud.tesla.com',
   'fleet-api.prd.na.vn.cloud.tesla.com',
   'fleet-api.prd.cn.vn.cloud.tesla.cn',
+  // Pörssisähkön hinnat (älylataus)
+  'api.porssisahko.net',
+  'api.spot-hinta.fi',
 ]);
 
 export default {

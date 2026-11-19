@@ -25,6 +25,9 @@ export const DEFAULT_SETTINGS = {
   refreshInterval: 60,
   units: 'metric',
   domain: '',
+  batteryKwh: 75,
+  chargeKw: '',
+  carColor: 'auto',
 };
 
 export const store = {

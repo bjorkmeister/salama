@@ -15,9 +15,12 @@ avaimellasi Teslan **Vehicle Command Protocolilla**, kuten uudet autot vaativat.
 | **Lataus** | Aloitus ja lopetus, latausluukku, latausraja, latausvirta, vakio- tai maksimilataus, ajastettu lähtö (esilämmitys ja yösähkö), latausaikataulut, lähimmät Superchargerit ja navigointi niille |
 | **Kartta** | Auton sijainti ja suunta, osoitteen tai karttapisteen lähetys auton navigaattoriin, lähin Supercharger, HomeLink |
 | **Turva** | Lukitus, etu- ja takaluukku, ikkunat, kattoluukku, Cybertruckin lavakate, vartiotila, vierastila, valet-tila, PIN ajamiseen, nopeusrajoitin, avaimeton ajo |
+| **Kohtaukset** | Useita komentoja yhdellä napautuksella: *Lähtövalmis*, *Pysäköinti*, *Pitkälle matkalle* ja *Koira autoon*. Kohtaukset toimivat myös pikalinkkeinä (`?scene=lahto`) kotinäytölle tai iPhonen Pikakomentoihin |
+| **Älylataus** | Hakee pörssisähkön tuntihinnat, laskee halvimman latausikkunan ennen lähtöaikaa ja tallentaa sen latausaikatauluksi suoraan autoon |
+| **Tilastot** | Ajetut km, kulutus (Wh/km), seisontakulutus, lataukset, toimintamatka 100 %:lla, akun varaus ja Supercharger-kulut. Historia tallentuu tähän selaimeen ja on vietävissä CSV:nä |
 | **Lisää** | Käyttöönotto-ohjattu, auton nimeäminen, virransäästö, lisävarustevirta, Boombox, lapsilukko, käyttäjätietojen poisto, ohjelmistopäivitysten ajastus, **kaikki Fleet API -tietohaut** (huolto, hälytykset, kuljettajat, takuu, lataushistoria, varusteet…), **komentokonsoli** (kaikki noin 80 komentoa) ja **REST-konsoli** |
 
-Lisäksi mukana ovat tumma ja vaalea teema, mobiilinäkymä (voi lisätä kotinäytölle), automaattinen
+Auto piirretään sen omalla värillä. Lasikaton läpi näkyy sisätila ja istuinlämmityksen hehku, ja tilasymbolit kertovat, mikä on päällä. Lisäksi mukana ovat tumma ja vaalea teema, mobiilinäkymä (voi lisätä kotinäytölle), automaattinen
 herätys komentoa lähetettäessä, nukkuvan auton välimuistitiedot ja suomenkielinen käyttöliittymä.
 
 ## Miten se toimii
@@ -99,7 +102,7 @@ npx wrangler deploy
 npx wrangler secret put CLIENT_SECRET   # valinnainen: secret ei silloin ole selaimessa
 ```
 
-Syötä Workerin osoite sovelluksen asetukseen **CORS-välityspalvelin**. Worker välittää vain Teslan
+Syötä Workerin osoite sovelluksen asetukseen **CORS-välityspalvelin**. Worker välittää myös pörssisähkön hintahaut (api.porssisahko.net ja api.spot-hinta.fi), jos selain ei saa niitä suoraan. Worker välittää vain Teslan
 palvelimille ja vain sinun sivultasi. Cloudflaren ilmaistaso riittää hyvin.
 
 ## Hyvä tietää

@@ -135,6 +135,26 @@ export async function command(name, p = {}) {
   return { result: true, reason: '' };
 }
 
+export function demoPrices() {
+  const h0 = Math.floor(Date.now() / 3600000) * 3600000 - 3 * 3600000;
+  const hours = [];
+  for (let i = 0; i < 40; i++) {
+    const t = h0 + i * 3600000, hr = new Date(t).getHours();
+    const base = 7 + 6 * Math.sin(((hr - 4) / 24) * 2 * Math.PI) + (hr >= 7 && hr <= 9 ? 6 : 0) + (hr >= 17 && hr <= 20 ? 8 : 0);
+    hours.push({ start: t, end: t + 3600000, c: Math.max(0.4, +(base + Math.sin(i * 1.7) * 1.5).toFixed(2)) });
+  }
+  return { at: Date.now(), source: 'demo (keksityt hinnat)', hours };
+}
+
+export function demoSuperchargerHistory() {
+  const sites = ['Helsinki – Pasila', 'Espoo – Kehä I', 'Lahti', 'Tampere – Lielahti', 'Oulu'];
+  return Array.from({ length: 14 }, (_, i) => {
+    const t = Date.now() - (i * 23 + 3) * 86400000;
+    const kwh = 25 + ((i * 17) % 40);
+    return { siteLocationName: sites[i % sites.length], chargeStartDateTime: new Date(t).toISOString(), fees: [{ feeType: 'CHARGING', currencyCode: 'EUR', usageBase: kwh, totalDue: +(kwh * 0.39).toFixed(2) }] };
+  });
+}
+
 export const demoInfo = {
   nearby_charging_sites: {
     congestion_sync_time_utc_secs: Math.floor(Date.now() / 1000),

@@ -2,6 +2,8 @@
 
 import { icon } from './icons.js';
 import { esc, attr, fmtNum, fmtKm, fmtTemp, hhmm, duration, daysText, DAY_NAMES, km, MI } from './ui.js';
+import { carHero } from './car.js';
+import { scenesCard, spotCard } from './features.js';
 
 // ---------- Rakennuspalikat ----------
 
@@ -146,7 +148,7 @@ export function homeView(d, st) {
   ].join('');
 
   const kv = [
-    ['Toimintamatka (arvio)', `${fmtKm(c.est_battery_range)} km`],
+    c.est_battery_range != null ? ['Toimintamatka (arvio)', `${fmtKm(c.est_battery_range)} km`] : ['Käytettävä akku', `${c.usable_battery_level ?? '–'} %`],
     ['Sisälämpötila', fmtTemp(cl.inside_temp)],
     ['Ulkolämpötila', fmtTemp(cl.outside_temp)],
     ['Matkamittari', `${fmtKm(v.odometer)} km`],
@@ -156,7 +158,7 @@ export function homeView(d, st) {
 
   return `<div class="grid">
   <section class="card span-7 live"><div class="hero">
-    <div class="car-wrap">${carSvg(d)}${tires(v)}</div>
+    ${carHero(d)}
     <div class="stats">
       <div class="battery">${batteryRing(c)}
         <div><div class="range-big num">${fmtKm(c.battery_range)} <small>km</small></div>
@@ -167,6 +169,7 @@ export function homeView(d, st) {
     </div>
   </div></section>
   <section class="card span-5 live"><div class="card-head"><h2>${icon('spark')}Pikatoiminnot</h2></div><div class="actions">${actions}</div></section>
+  ${scenesCard()}
   <section class="card span-6 live"><div class="card-head"><h2>${icon('music')}Media</h2><span class="muted small">${esc(m.now_playing_source || '')}</span></div>
     <div class="media"><div class="art">${icon('music')}</div><div class="meta">
       <div class="t">${esc(m.now_playing_title || 'Ei toistoa')}</div><div class="muted small">${esc(m.now_playing_artist || '')}</div>
@@ -333,6 +336,7 @@ export function chargeView(d, st) {
       <p class="muted tiny" style="margin:0">Aikataulu sidotaan auton nykyiseen sijaintiin.</p>
     </form>
   </section>
+  ${spotCard(d, st)}
   ${nearbyCard(st)}
   </div>`;
 }

@@ -71,7 +71,7 @@ function setupView() {
       </ol>`)}
     ${step(2, hasKey, 'Luo komentoavain ja julkaise julkinen avain', `
       <p>Komennot allekirjoitetaan omalla P-256-avaimellasi. Yksityinen avain jää vain tähän selaimeen. Julkinen avain julkaistaan sivustollasi osoitteessa
-      <code>https://${esc(domain)}/${PEM_PATH}</code> – lisää tiedosto GitHub-repoon samaan polkuun.</p>
+      <code>https://${esc(domain)}/${PEM_PATH}</code> – lisää tiedosto repoon <code>${esc(domain)}</code> (GitHubissa repo nimeltä <code>${esc(domain)}</code>) samaan polkuun. Tiedoston on oltava verkkotunnuksen juuressa, vaikka sovellus olisi alihakemistossa.</p>
       <div class="row">
         ${hasKey ? `${btn('Lataa julkinen avain', { cls: 'sm primary', ic: 'download', a: 'key-download' })}${btn('Kopioi', { cls: 'sm', ic: 'copy', a: 'key-copy' })}${btn('Vie yksityinen avain', { cls: 'sm', ic: 'key', a: 'key-export' })}` : btn('Luo avainpari', { cls: 'sm primary', ic: 'key', a: 'key-generate' })}
         ${btn('Tuo avain (.pem)', { cls: 'sm', ic: 'upload', a: 'key-import' })}

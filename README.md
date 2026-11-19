@@ -43,16 +43,19 @@ Selain (GitHub Pages)
 
 ### 1. GitHub Pages
 
-Tesla vaatii julkisen avaimen **verkkotunnuksen juureen**, joten helpoin vaihtoehto on GitHubin
-käyttäjäsivu:
+Sovellus voi asua missä tahansa repossa, esimerkiksi `salama` → `https://<käyttäjä>.github.io/salama/`.
+Avaa reposta **Settings → Pages → Deploy from a branch → `main` / root**.
 
-1. Luo repo nimeltä **`<käyttäjätunnus>.github.io`** ja lisää nämä tiedostot sinne.
-2. Avaa reposta **Settings → Pages → Deploy from a branch → `main` / root**.
-3. Sivu toimii osoitteessa `https://<käyttäjätunnus>.github.io/`.
+Tesla hakee julkisen avaimen kuitenkin aina **verkkotunnuksen juuresta**:
+`https://<käyttäjä>.github.io/.well-known/appspecific/com.tesla.3p.public-key.pem`.
+Juureen voi julkaista vain repo nimeltä **`<käyttäjä>.github.io`**, joten:
 
-Tiedosto `.nojekyll` on mukana, jotta GitHub julkaisee myös `.well-known`-kansion.
-Jos käytät jotain muuta reponimeä, julkinen avain pitää silti julkaista juureen, eli käyttäjäsivulle
-tai omaan domainiin.
+* Jos sovellus on jossain muussa repossa, luo lisäksi repo `<käyttäjä>.github.io`. Siihen riittää
+  `.well-known/appspecific/com.tesla.3p.public-key.pem` ja tyhjä `.nojekyll`-tiedosto. Ota siitäkin
+  Pages käyttöön. Muiden repojen sivut, kuten `/salama/`, toimivat edelleen normaalisti.
+* Jos sovellus on suoraan `<käyttäjä>.github.io`-repossa, avain menee samaan repoon.
+
+`.nojekyll` tarvitaan, jotta GitHub julkaisee `.well-known`-kansion.
 
 ### 2. Sovellus Teslan kehittäjäportaalissa
 
@@ -60,7 +63,7 @@ Luo sovellus osoitteessa [developer.tesla.com](https://developer.tesla.com):
 
 * **OAuth grant types**: Authorization Code ja Client Credentials
 * **Allowed Origin**: `https://<käyttäjätunnus>.github.io`
-* **Redirect URI**: `https://<käyttäjätunnus>.github.io/`
+* **Redirect URI**: sovelluksen osoite, esim. `https://<käyttäjätunnus>.github.io/salama/`
 * **Scopes**: Vehicle Information, Vehicle Location, Vehicle Commands, Vehicle Charging Management
 
 Kopioi Client ID ja Client Secret.
@@ -68,8 +71,8 @@ Kopioi Client ID ja Client Secret.
 ### 3. Loput tehdään sovelluksessa: Lisää → Käyttöönotto
 
 1. Syötä **Client ID** (ja Client Secret) ja valitse alueeksi **Eurooppa**.
-2. **Luo avainpari** → **Lataa julkinen avain** → lisää tiedosto repoon polkuun
-   `.well-known/appspecific/com.tesla.3p.public-key.pem` ja pushaa. Sovellus näyttää vihreän
+2. **Luo avainpari** → **Lataa julkinen avain** → lisää tiedosto `<käyttäjä>.github.io`-repoon
+   polkuun `.well-known/appspecific/com.tesla.3p.public-key.pem` ja pushaa. Sovellus näyttää vihreän
    merkin, kun julkaistu avain täsmää.
 3. **Rekisteröi nyt**. Tämä tehdään kerran. Vaihtoehtoisesti voit ajaa skriptin:
    ```bash
